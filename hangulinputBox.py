@@ -3,6 +3,9 @@ import time
 
 from hangul_utils.unicode import join_jamos
 
+BLACK = (0,0,0)
+WHITE = (255,255,255)
+
 class HangulInputBox(pygame.sprite.Sprite):
     '''
     pygame 내부에 사용되는 비쥬얼 컴포넌트로
@@ -23,25 +26,26 @@ class HangulInputBox(pygame.sprite.Sprite):
     cons_double = {'rt': 'ㄳ', 'sw': 'ㄵ', 'sg': 'ㄶ', 'fr': 'ㄺ', 'fa': 'ㄻ', 'fq': 'ㄼ', 'ft': 'ㄽ', 'fx': 'ㄾ', 'fv': 'ㄿ',
                    'fg': 'ㅀ', 'qt': 'ㅄ'}
 
-    def __init__(self, font:str, fontSize:int, width:int, fColor:str, bColor:str):
+    def __init__(self, font:str, fontSize:int, width:int, fColor, basicWord:str, hanMode:bool):
         pygame.sprite.Sprite.__init__(self)
         self.font = pygame.font.SysFont(font, fontSize)
         self.fontSize:int = fontSize
         self.width = width * self.fontSize
-        self.height = fontSize
-        self.fColor = pygame.Color(fColor)
-        self.bColor = pygame.Color(bColor)
+        self.height = fontSize + 10
+        self.fColor = fColor
+        self.active = False
+        self.basicWord = basicWord
 
         self.image = pygame.Surface([self.width, self.height])
         self.rect = self.image.get_rect()
 
-        self.text = '첫 글자'
-        self.textImage = self.font.render(self.text, True, self.fColor)
+        self.text = basicWord
+        self.textImage = self.font.render(self.text, True, BLACK, WHITE)
         self.textRect = self.textImage.get_rect()
         self.hanText = ''
-        self.hanMode = False
+        self.hanMode = hanMode
 
-        self.cursor = pygame.Rect(self.textRect.topright, (3, self.fontSize))
+        self.cursor = pygame.Rect([self.textRect.topright[0],self.textRect.topright[1]+10], (3, self.fontSize))
 
         pygame.key.set_repeat(500, 50)
 
@@ -49,46 +53,35 @@ class HangulInputBox(pygame.sprite.Sprite):
 
     def update(self, event) -> None:
         if event == None: event = pygame.event.Event(pygame.USEREVENT,{})
-        if event.type == pygame.KEYDOWN:  # 키다운 이벤트라면, key, mod, ucicode, scancode 속성을 가진다.
+        if event.type == pygame.MOUSEBUTTONDOWN: #클릭확인
+            if self.rect.collidepoint(event.pos):
+                self.active = True
+                if self.text == self.basicWord:
+                    self.fColor = BLACK
+                    self.text = ''
+            else:
+                self.active = False
+        if event.type == pygame.KEYDOWN and self.active:  # 키다운 이벤트라면, key, mod, ucicode, scancode 속성을 가진다.
             if event.key == pygame.K_RETURN or event.key == pygame.K_CARET:
                 text2 = self.text + HangulInputBox.engkor(self.hanText)
                 self.enterEvent.text = text2
                 pygame.event.post(self.enterEvent)
-                self.text = ''
-                self.hanText = ''
+                self.active = False
             elif event.key == pygame.K_BACKSPACE:
                 if self.hanMode and len(self.hanText) > 0:
                     self.hanText = self.hanText[:-1]
                 elif len(self.text) > 0:
                     self.text = self.text[:-1]
-            elif event.mod & pygame.KMOD_LSHIFT and event.key == pygame.K_SPACE:  # 한영 변환 인식 Left Shift + space
-                if self.hanMode:  # 영문모드로 토글
-                    self.text += HangulInputBox.engkor(self.hanText)
-                    self.cursor = pygame.Rect(self.textRect.topright, (3, self.fontSize))
-                    self.hanMode = False
-                else:  # 한글모드로 토클
-                    self.cursor = pygame.Rect(self.textRect.topright, (16, self.fontSize))
-                    self.hanMode = True
-                self.hanText = ''
             else:
                 if self.hanMode:
                     self.hanText += event.unicode
                 else:
                     self.text += event.unicode
-            #----------
-            text2 = self.text + HangulInputBox.engkor(self.hanText)
-            self.textImage = self.font.render(text2, True, 'white')
-            self.textRect = self.textImage.get_rect()
-            if self.textRect.width > self.rect.width:
-                self.textRect.topright = (self.rect.width - self.fontSize, 0)
-            else:
-                self.textRect.topleft = (0,0)
-            self.cursor.topleft = self.textRect.topright
 
-        self.image.fill(self.bColor)
-        self.image.blit(self.textImage, self.textRect)
-        if time.time() % 1 > 0.5:
-            pygame.draw.rect(self.image, 'red', self.cursor)
+        text2 = self.text + HangulInputBox.engkor(self.hanText)
+        self.textImage = self.font.render(text2, True, BLACK, WHITE)
+        return text2
+    
 
     @classmethod
     def engkor(cls, text):
@@ -144,3 +137,20 @@ class HangulInputBox(pygame.sprite.Sprite):
             i += j
 
         return join_jamos(result)
+
+    def draw(self, screen):
+        self.textRect = self.textImage.get_rect()
+        if self.textRect.width > self.rect.width:
+            self.textRect.topright = (self.rect.width - self.fontSize, 0)
+        else:
+            self.textRect.topleft = (0,0)
+        self.cursor.topleft = [self.textRect.topright[0],self.textRect.topright[1]+10]
+        self.image.fill(WHITE)
+        self.image.blit(self.textImage, self.textRect)
+        if self.active:
+            if time.time() % 1 > 0.5:
+                pygame.draw.rect(self.image, BLACK, self.cursor)
+        screen.blit(self.image, self.rect)
+        teduri_rect = self.rect.move(-3,0)
+        teduri_rect.inflate_ip(6,10)
+        pygame.draw.rect(screen, self.fColor, teduri_rect, 2)

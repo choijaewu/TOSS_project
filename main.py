@@ -11,51 +11,23 @@ class Button(): #버튼 클래스
 
     def draw(self):
         screen.blit(self.image, (self.rect.x, self.rect.y))
-
-class Textnput_Box:
-    def __init__(self, x, y, w, h, text=''):
-        self.rect = pygame.Rect(x, y, w, h)
-        self.color = GRAY
-        self.text = text
-        font = pygame.font.SysFont("hancommalangmalang", 30, False, False)
-        self.txt_surface = font.render(text, True, BLACK)
-        self.active = False
-
-    def handle_event(self, event):
-        if event.type == pygame.MOUSEBUTTONDOWN: #클릭확인
-            if self.rect.collidepoint(event.pos):
-                self.active = True
-            else:
-                self.active = False
-            
-            if self.active: self.color = BLACK #활성화 따른 색 변화
-            else: self.color = GRAY
-
-        if event.type == pygame.KEYDOWN:
-            if self.active:
-                if event.key == pygame.K_RETURN: #엔터
-                    self.active = False
-                    return self.text
-                elif event.key == pygame.K_BACKSPACE: #백스페이스
-                    self.text = self.text[:-1]
-
-                else: #나머지 키는 input
-                    self.text += event.unicode
-                self.txt_surface = font.render(self.text, True, BLACK)
-
-    def draw(self):
-        screen.blit(self.txt_surface, (self.rect.x + 5, self.rect.y + 5))
-        pygame.draw.rect(screen, self.color, self.rect, 2)
-
+    
 def add_word():
     global run
     add_running = True
 
+    word_input_box = HangulInputBox("hancommalangmalang", 30, 15, BLACK, "단어를 입력하세요", False)
+    word_input_box.rect.center = (1366/4, 300)
+    meaning_input_box = HangulInputBox("hancommalangmalang", 30, 15, BLACK, "뜻을 입력하세요", True)
+    meaning_input_box.rect.center = (1366/4*3, 300)
+    add_button = Button(583, 550, "club_project/images/add_button.png")
+    added_button = Button(583, 550, "club_project/images/added_button.png")
     font = pygame.font.SysFont("hancommalangmalang", 50, False, False)
     title = font.render("원하는 단어를 추가하세요.", True, BLACK)
-    word_input_box = Textnput_Box(200, 200, 1000, 60, "단어를 입력하세요")
-    meaning_input_box = Textnput_Box(200, 300, 1000, 60, "뜻를 입력하세요")
+    word = font.render("단어", True, BLACK)
+    meaning = font.render("뜻", True, BLACK)
 
+    checked_time = 0
     while add_running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT: #종료코드
@@ -63,15 +35,25 @@ def add_word():
                 run = False 
             if exit_button.click_check(event): #뒤로가기
                 add_running = False
+            if add_button.click_check (event): #추가 버튼 클릭
+                with open("club_project/words.txt", 'a', encoding='utf-8') as file:  # 'a'는 파일 끝에 내용 추가
+                    file.write(f"{word_input_box.update(event)}: {meaning_input_box.update(event)}\n")
+                checked_time = time.time()
 
-            word_input_box.handle_event(event)
-            meaning_input_box.handle_event(event)
+            word_input_box.update(event)
+            meaning_input_box.update(event)
 
         screen.fill(WHITE)
         exit_button.draw()
-        word_input_box.draw()
-        meaning_input_box.draw()
-        screen.blit(title, (430, 70))
+        if time.time()-checked_time < 1:
+            added_button.draw()
+        else:
+            add_button.draw()
+        word_input_box.draw(screen)
+        meaning_input_box.draw(screen)
+        screen.blit(title, (427, 70))
+        screen.blit(word, (120, 200))
+        screen.blit(meaning, (805, 200))
         pygame.display.update()
 
 def memorize_word():
@@ -80,6 +62,7 @@ def memorize_word():
 
     font = pygame.font.SysFont("hancommalangmalang", 50, False, False)
     title = font.render("단어 암기", True, BLACK)
+    
     while add_running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT: #종료코드
@@ -90,7 +73,7 @@ def memorize_word():
 
         screen.fill(WHITE)
         exit_button.draw()
-        screen.blit(title, (430, 70))
+        screen.blit(title, (588, 70))
         pygame.display.update()
 
 def memorize_meaning():
@@ -109,11 +92,10 @@ def memorize_meaning():
 
         screen.fill(WHITE)
         exit_button.draw()
-        screen.blit(title, (430, 70))
+        screen.blit(title, (611, 70))
         pygame.display.update()
 
 
-import pygame
 from hangulinputBox import *
 
 
@@ -134,7 +116,7 @@ memorize_word_button = Button(510, 225, "club_project/images/memorize_word.png")
 memorize_meaning_button = Button(880, 225, "club_project/images/memorize_meaning.png")
 
 font = pygame.font.SysFont("hancommalangmalang", 50, False, False)
-choose_function_tx = font.render("원하는 기능을 선택하세요", True, BLACK)
+title = font.render("원하는 기능을 선택하세요", True, BLACK)
 
 run = True
 while run:
@@ -149,7 +131,7 @@ while run:
             memorize_meaning()
 
     screen.fill(WHITE)
-    screen.blit(choose_function_tx, (430, 70))
+    screen.blit(title, (427, 70))
     add_button.draw()
     memorize_word_button.draw()
     memorize_meaning_button.draw()
