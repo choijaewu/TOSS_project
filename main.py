@@ -9,7 +9,7 @@ class Button(): #버튼 클래스
             if self.rect.collidepoint(event.pos): #마우스 위치
                 return True
 
-    def draw(self):
+    def draw(self, screen):
         screen.blit(self.image, (self.rect.x, self.rect.y))
     
 def add_word():
@@ -44,11 +44,11 @@ def add_word():
             meaning_input_box.update(event)
 
         screen.fill(WHITE)
-        exit_button.draw()
+        exit_button.draw(screen)
         if time.time()-checked_time < 1:
-            added_button.draw()
+            added_button.draw(screen)
         else:
-            add_button.draw()
+            add_button.draw(screen)
         word_input_box.draw(screen)
         meaning_input_box.draw(screen)
         screen.blit(title, (427, 70))
@@ -72,7 +72,7 @@ def memorize_word():
                 add_running = False
 
         screen.fill(WHITE)
-        exit_button.draw()
+        exit_button.draw(screen)
         screen.blit(title, (588, 70))
         pygame.display.update()
 
@@ -91,7 +91,7 @@ def memorize_meaning():
                 add_running = False
 
         screen.fill(WHITE)
-        exit_button.draw()
+        exit_button.draw(screen)
         screen.blit(title, (611, 70))
         pygame.display.update()
 
@@ -132,9 +132,9 @@ while run:
 
     screen.fill(WHITE)
     screen.blit(title, (427, 70))
-    add_button.draw()
-    memorize_word_button.draw()
-    memorize_meaning_button.draw()
+    add_button.draw(screen)
+    memorize_word_button.draw(screen)
+    memorize_meaning_button.draw(screen)
     pygame.display.update()
 
 pygame.quit()
