@@ -40,7 +40,8 @@ class HangulInputBox(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
 
         self.text = basicWord
-        self.textImage = self.font.render(self.text, True, BLACK, WHITE)
+        self.text2 = ''
+        self.textImage = self.font.render(self.text, True, self.fColor, WHITE)
         self.textRect = self.textImage.get_rect()
         self.hanText = ''
         self.hanMode = hanMode
@@ -63,8 +64,8 @@ class HangulInputBox(pygame.sprite.Sprite):
                 self.active = False
         if event.type == pygame.KEYDOWN and self.active:  # 키다운 이벤트라면, key, mod, ucicode, scancode 속성을 가진다.
             if event.key == pygame.K_RETURN or event.key == pygame.K_CARET:
-                text2 = self.text + HangulInputBox.engkor(self.hanText)
-                self.enterEvent.text = text2
+                self.text2 = self.text + HangulInputBox.engkor(self.hanText)
+                self.enterEvent.text = self.text2
                 pygame.event.post(self.enterEvent)
                 self.active = False
             elif event.key == pygame.K_BACKSPACE:
@@ -78,9 +79,8 @@ class HangulInputBox(pygame.sprite.Sprite):
                 else:
                     self.text += event.unicode
 
-        text2 = self.text + HangulInputBox.engkor(self.hanText)
-        self.textImage = self.font.render(text2, True, BLACK, WHITE)
-        return text2
+        self.text2 = self.text + HangulInputBox.engkor(self.hanText)
+        self.textImage = self.font.render(self.text2, True, self.fColor, WHITE)
     
 
     @classmethod
@@ -149,7 +149,7 @@ class HangulInputBox(pygame.sprite.Sprite):
         self.image.blit(self.textImage, self.textRect)
         if self.active:
             if time.time() % 1 > 0.5:
-                pygame.draw.rect(self.image, BLACK, self.cursor)
+                pygame.draw.rect(self.image, self.fColor, self.cursor)
         screen.blit(self.image, self.rect)
         teduri_rect = self.rect.move(-3,0)
         teduri_rect.inflate_ip(6,10)

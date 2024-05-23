@@ -1,1 +1,3 @@
-hello: 안녕
+arithmetic: 산수
+monument: 기념물
+irritated: 짜증나는
