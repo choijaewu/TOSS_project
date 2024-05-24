@@ -129,16 +129,17 @@ def odapnote(incorrect_li:list, total_len): #오답노트
 
             pygame.display.update()
 
-def memorize_word(): #todo memorize 하나로 합치기(word, meaning)
+def memorize(mode:str):
     global run
     memorize_running = True
 
     font = pygame.font.SysFont("hancommalangmalang", 50, False, False)
-    title = font.render("단어 암기", True, BLACK)
+    title_text = "단어 암기" if mode == 'word' else "뜻 암기"
+    title = font.render(title_text, True, BLACK)
     answer_check_button = Button(363, 550, "club_project/images/answer_check_button.png")
     next_button = Button(363, 550, "club_project/images/next_button.png")
     i_dont_know_button = Button(803, 550, "club_project/images/i_dont_know_button.png")
-    answer_input = HangulInputBox("hancommalangmalang", 50, 10, BLACK, "정답을 입력하세요", False)
+    answer_input = HangulInputBox("hancommalangmalang", 50, 10, BLACK, "정답을 입력하세요", mode == 'meaning')
     answer_input.rect.topleft = (800, 300)
     notice = font.render("", True, BLACK)
     
@@ -152,13 +153,13 @@ def memorize_word(): #todo memorize 하나로 합치기(word, meaning)
     incorrect_li = []
     while memorize_running:
         for event in pygame.event.get():
-            if event.type == pygame.QUIT: #종료코드
+            if event.type == pygame.QUIT:  # 종료코드
                 memorize_running = False
                 run = False
-            elif exit_button.click_check(event): #뒤로가기
+            elif exit_button.click_check(event):  # 뒤로가기
                 memorize_running = False
 
-            elif answer_check_button.click_check(event) and is_correct == False:
+            elif answer_check_button.click_check(event) and not is_correct:
                 answer = answer_input.text2
                 if answer == real_answer:
                     is_correct = True
@@ -171,12 +172,16 @@ def memorize_word(): #todo memorize 하나로 합치기(word, meaning)
             elif next_button.click_check(event) and is_correct:
                 i += 1
                 answer_input.text = "정답을 입력하세요"
+                if mode == 'meaning':
+                    answer_input.hanText = ''
                 answer_input.fColor = BLACK
                 is_correct = False
             elif i_dont_know_button.click_check(event) and not is_correct:
                 answer_input.text = real_answer
+                if mode == 'meaning':
+                    answer_input.hanText = ''
                 answer_input.fColor = RED
-                is_correct = True #next_button 활성화
+                is_correct = True  # next_button 활성화
                 incorrect_cnt += 1
                 incorrect_li.append(words_li[i])
             
@@ -186,96 +191,23 @@ def memorize_word(): #todo memorize 하나로 합치기(word, meaning)
             memorize_running = False
             odapnote(incorrect_li, len(words_li))
         else:
-            meaning = font.render(f"{words_li[i][1]}", True, BLACK)
-            real_answer = words_li[i][0]
+            if mode == 'word':
+                question = font.render(words_li[i][1], True, BLACK)
+                real_answer = words_li[i][0]
+            else:
+                question = font.render(words_li[i][0], True, BLACK)
+                real_answer = words_li[i][1]
 
         screen.fill(WHITE)
         exit_button.draw(screen)
-        if is_correct: 
+        if is_correct:
             next_button.draw(screen)
         else:
             answer_check_button.draw(screen)
         answer_input.draw(screen)
         i_dont_know_button.draw(screen)
-        screen.blit(title, (588, 70))
-        screen.blit(meaning, (300, 300))
-        if time.time() - checked_time < 1:
-            screen.blit(notice, (570, 150))
-
-        pygame.display.update()
-
-def memorize_meaning():
-    global run
-    memorize_running = True
-
-    font = pygame.font.SysFont("hancommalangmalang", 50, False, False)
-    title = font.render("뜻 암기", True, BLACK)
-    answer_check_button = Button(363, 550, "club_project/images/answer_check_button.png")
-    next_button = Button(363, 550, "club_project/images/next_button.png")
-    i_dont_know_button = Button(803, 550, "club_project/images/i_dont_know_button.png")
-    answer_input = HangulInputBox("hancommalangmalang", 50, 10, BLACK, "정답을 입력하세요", True)
-    answer_input.rect.topleft = (800, 300)
-    notice = font.render("", True, BLACK)
-    
-    words_li = read_words("club_project/words.txt")
-    
-    i = 0
-    is_correct = False
-    real_answer = ""
-    checked_time = 0
-    incorrect_cnt = 0
-    incorrect_li = []
-    while memorize_running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT: #종료코드
-                memorize_running = False
-                run = False
-            elif exit_button.click_check(event): #뒤로가기
-                memorize_running = False
-
-            elif answer_check_button.click_check(event) and is_correct == False:
-                answer = answer_input.text2
-                if answer == real_answer:
-                    is_correct = True
-                    notice = font.render("맞았습니다!", True, GREEN)
-                    checked_time = time.time()
-                else:
-                    is_correct = False
-                    notice = font.render("틀렸습니다!", True, RED)
-                    checked_time = time.time()
-            elif next_button.click_check(event) and is_correct:
-                i += 1
-                answer_input.text = "정답을 입력하세요"
-                answer_input.hanText = ''
-                answer_input.fColor = BLACK
-                is_correct = False
-            elif i_dont_know_button.click_check(event):
-                answer_input.text = real_answer
-                answer_input.hanText = ''
-                answer_input.fColor = RED
-                is_correct = True #next_button 활성화
-                incorrect_cnt += 1
-                incorrect_li.append(words_li[i])
-            
-            answer_input.update(event)
-        
-        if i >= len(words_li):
-            memorize_running = False
-            odapnote(incorrect_li, len(words_li))
-        else:
-            word = font.render(f"{words_li[i][0]}", True, BLACK)
-            real_answer = words_li[i][1]
-
-        screen.fill(WHITE)
-        exit_button.draw(screen)
-        if is_correct: 
-            next_button.draw(screen)
-        else:
-            answer_check_button.draw(screen)
-        answer_input.draw(screen)
-        i_dont_know_button.draw(screen)
-        screen.blit(title, (611, 70))
-        screen.blit(word, (300, 300))
+        screen.blit(title, (588, 70) if mode == 'word' else (611, 70))
+        screen.blit(question, (300, 300))
         if time.time() - checked_time < 1:
             screen.blit(notice, (570, 150))
 
@@ -313,9 +245,9 @@ while run:
         if add_button.click_check(event) == True: #단어추가 클릭
             add_word()
         if memorize_word_button.click_check(event) == True: #단어암기 클릭
-            memorize_word()
+            memorize("word")
         if memorize_meaning_button.click_check(event) == True: #뜻암기 클릭
-            memorize_meaning()
+            memorize("meaning")
 
     screen.fill(WHITE)
     screen.blit(title, (427, 70))
